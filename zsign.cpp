@@ -17,6 +17,7 @@ const struct option options[] = {
 	{ "password",		required_argument,		NULL, 'p' },
 	{ "bundleid",		required_argument,		NULL, 'b' },
 	{ "bundlename",		required_argument,		NULL, 'n' },
+	{ "minimumosversion",		required_argument,		NULL, 'm' },
 	{ "entitlements",	required_argument,		NULL, 'e' },
 	{ "output",			required_argument,		NULL, 'o' },
 	{ "ziplevel",		required_argument,		NULL, 'z' },
@@ -41,6 +42,8 @@ int usage()
 	ZLog::Print("-p, --password\t\tPassword for private key or p12 file.\n");
 	ZLog::Print("-b, --bundleid\t\tNew bundle id to change.\n");
 	ZLog::Print("-n, --bundlename\tNew bundle name to change.\n");
+	ZLog::Print("-m, --minimumosversion\tNew Minimum OS Version to change.\n");
+
 	ZLog::Print("-e, --entitlements\tNew entitlements to change.\n");
 	ZLog::Print("-z, --ziplevel\t\tCompressed level when output the ipa file. (0-9)\n");
 	ZLog::Print("-l, --dylib\t\tPath to inject dylib file.\n");
@@ -71,6 +74,7 @@ int main(int argc, char *argv[])
 	string strOutputFile;
 	string strDisplayName;
 	string strEntitlementsFile;
+	string strMinimumOSVersion;
 
 	int opt = 0;
 	int argslot = -1;
@@ -102,6 +106,9 @@ int main(int argc, char *argv[])
 		case 'n':
 			strDisplayName = optarg;
 			break;
+		case 'm':
+			strMinimumOSVersion = optarg;
+			break;				
 		case 'e':
 			strEntitlementsFile = optarg;
 			break;
@@ -210,7 +217,7 @@ int main(int argc, char *argv[])
 
 	timer.Reset();
 	ZAppBundle bundle;
-	bool bRet = bundle.SignFolder(&zSignAsset, strFolder, strBundleId, strDisplayName, strDyLibFile, bForce, bWeakInject, bEnableCache);
+	bool bRet = bundle.SignFolder(&zSignAsset, strFolder, strBundleId, strDisplayName, strMinimumOSVersion, strDyLibFile, bForce, bWeakInject, bEnableCache);
 	timer.PrintResult(bRet, ">>> Signed %s!", bRet ? "OK" : "Failed");
 
 	if (bInstall && strOutputFile.empty())
