@@ -17,7 +17,7 @@ const struct option options[] = {
 	{ "password",		required_argument,		NULL, 'p' },
 	{ "bundleid",		required_argument,		NULL, 'b' },
 	{ "bundlename",		required_argument,		NULL, 'n' },
-	{ "minimumosversion",		required_argument,		NULL, 'm' },
+	{ "minimumosversion",		required_argument,		NULL, 's' },
 	{ "entitlements",	required_argument,		NULL, 'e' },
 	{ "output",			required_argument,		NULL, 'o' },
 	{ "ziplevel",		required_argument,		NULL, 'z' },
@@ -42,7 +42,7 @@ int usage()
 	ZLog::Print("-p, --password\t\tPassword for private key or p12 file.\n");
 	ZLog::Print("-b, --bundleid\t\tNew bundle id to change.\n");
 	ZLog::Print("-n, --bundlename\tNew bundle name to change.\n");
-	ZLog::Print("-m, --minimumosversion\tNew Minimum OS Version to change.\n");
+	ZLog::Print("-s, --minimumosversion\tNew Minimum OS Version to change.\n");
 
 	ZLog::Print("-e, --entitlements\tNew entitlements to change.\n");
 	ZLog::Print("-z, --ziplevel\t\tCompressed level when output the ipa file. (0-9)\n");
@@ -106,9 +106,9 @@ int main(int argc, char *argv[])
 		case 'n':
 			strDisplayName = optarg;
 			break;
-		case 'm':
+		case 's':
 			strMinimumOSVersion = optarg;
-			break;				
+			break;
 		case 'e':
 			strEntitlementsFile = optarg;
 			break;
