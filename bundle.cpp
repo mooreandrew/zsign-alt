@@ -51,6 +51,7 @@ bool ZAppBundle::GetSignFolderInfo(const string &strFolder, JValue &jvNode, bool
 	ReadFile(strInfoPlistPath.c_str(), strInfoPlistData);
 	jvInfo.readPList(strInfoPlistData);
 	string strBundleId = jvInfo["CFBundleIdentifier"];
+	string strMinimumOSVersion = jvInfo["MinimumOSVersion"];
 	string strBundleExe = jvInfo["CFBundleExecutable"];
 	if (strBundleId.empty() || strBundleExe.empty())
 	{
@@ -64,6 +65,7 @@ bool ZAppBundle::GetSignFolderInfo(const string &strFolder, JValue &jvNode, bool
 
 	jvNode["bid"] = strBundleId;
 	jvNode["exec"] = strBundleExe;
+	jvNode["minimumosversion"] = strMinimumOSVersion;
 	jvNode["sha1"] = strInfoPlistSHA1Base64;
 	jvNode["sha2"] = strInfoPlistSHA256Base64;
 
@@ -453,7 +455,7 @@ void ZAppBundle::GetPlugIns(const string &strFolder, vector<string> &arrPlugIns)
 	}
 }
 
-bool ZAppBundle::SignFolder(ZSignAsset *pSignAsset, const string &strFolder, const string &strBundleID, const string &strDisplayName, const string &strDyLibFile, bool bForce, bool bWeakInject, bool bEnableCache)
+bool ZAppBundle::SignFolder(ZSignAsset *pSignAsset, const string &strFolder, const string &strBundleID, const string &strDisplayName, const string &strMinimumOSVersion, const string &strDyLibFile, bool bForce, bool bWeakInject, bool bEnableCache)
 {
 	m_bForceSign = bForce;
 	m_pSignAsset = pSignAsset;
@@ -469,7 +471,7 @@ bool ZAppBundle::SignFolder(ZSignAsset *pSignAsset, const string &strFolder, con
 		return false;
 	}
 
-	if (!strBundleID.empty() || !strDisplayName.empty())
+	if (!strBundleID.empty() || !strDisplayName.empty() || !strMinimumOSVersion.empty())
 	{ //modify bundle id
 		JValue jvInfoPlist;
 		if (jvInfoPlist.readPListPath("%s/Info.plist", m_strAppFolder.c_str()))
@@ -532,7 +534,12 @@ bool ZAppBundle::SignFolder(ZSignAsset *pSignAsset, const string &strFolder, con
 				jvInfoPlist["CFBundleDisplayName"] = strDisplayName;
 				ZLog::PrintV(">>> BundleName: %s -> %s\n", strOldDispalyName.c_str(), strDisplayName.c_str());
 			}
-
+			if (!strMinimumOSVersion.empty())
+			{
+				string strOldMinimumOSVersion = jvInfoPlist["MinimumOSVersion"];
+				jvInfoPlist["MinimumOSVersion"] = strMinimumOSVersion;
+				ZLog::PrintV(">>> MinimumOSVersion: %s -> %s\n", strOldMinimumOSVersion.c_str(), strMinimumOSVersion.c_str());
+			}
 			jvInfoPlist.writePListPath("%s/Info.plist", m_strAppFolder.c_str());
 		}
 		else
@@ -561,6 +568,23 @@ bool ZAppBundle::SignFolder(ZSignAsset *pSignAsset, const string &strFolder, con
 		}
 	}
 
+	if (!strMinimumOSVersion.empty())
+	{
+		m_bForceSign = true;
+		JValue jvInfoPlistStrings;
+		if (jvInfoPlistStrings.readPListPath("%s/zh_CN.lproj/InfoPlist.strings", m_strAppFolder.c_str()))
+		{
+			jvInfoPlistStrings["MinimumOSVersion"] = strMinimumOSVersion;
+			jvInfoPlistStrings.writePListPath("%s/zh_CN.lproj/InfoPlist.strings", m_strAppFolder.c_str());
+		}
+		jvInfoPlistStrings.clear();
+		if (jvInfoPlistStrings.readPListPath("%s/zh-Hans.lproj/InfoPlist.strings", m_strAppFolder.c_str()))
+		{
+			jvInfoPlistStrings["MinimumOSVersion"] = strMinimumOSVersion;
+			jvInfoPlistStrings.writePListPath("%s/zh-Hans.lproj/InfoPlist.strings", m_strAppFolder.c_str());
+		}
+	}	
+	
 	if (!WriteFile(pSignAsset->m_strProvisionData, "%s/embedded.mobileprovision", m_strAppFolder.c_str()))
 	{ //embedded.mobileprovision
 		ZLog::ErrorV(">>> Can't Write embedded.mobileprovision!\n");
